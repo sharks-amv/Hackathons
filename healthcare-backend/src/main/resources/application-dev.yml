@@ -1,0 +1,158 @@
+# application-dev.yml - Development Configuration
+
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: healthcare123
+    key-store-type: PKCS12
+    key-alias: healthcare-api
+  error:
+    include-message: on_param
+    include-binding-errors: on_param
+    include-stacktrace: on_param
+    include-exception: true
+
+spring:
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/healthcare_db
+    username: healthcare_user
+    password: secure_password_123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update  # Use 'update' for development, 'validate' for production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+        jdbc:
+          time_zone: UTC
+        type:
+          json_format_mapper: 'com.fasterxml.jackson.databind.ObjectMapper'
+    open-in-view: false
+
+  # Security Configuration
+  security:
+    require-ssl: true
+    headers:
+      frame: DENY
+      content-type: true
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: true
+    default-property-inclusion: NON_NULL
+    time-zone: UTC
+
+  # DevTools
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+# Application-specific Configuration
+app:
+  # JWT Configuration
+  jwt:
+    secret: dev-jwt-secret-key-for-development-only-change-in-production
+    expiration: 3600000  # 1 hour for development
+    refresh-expiration: 86400000  # 24 hours
+
+  # CORS Configuration
+  cors:
+    allowed-origins: https://localhost:3000,https://localhost:3001,https://127.0.0.1:3000
+
+  # Rate Limiting (More lenient for development)
+  rate-limit:
+    requests-per-minute: 200
+    burst-capacity: 300
+
+  # Audit Configuration
+  audit:
+    retention-days: 30  # Shorter retention for dev
+    cleanup-enabled: false  # Disable cleanup in dev
+
+  # Password Policy (Relaxed for development)
+  password:
+    min-length: 8
+    require-uppercase: true
+    require-lowercase: true
+    require-digits: true
+    require-special: true
+    max-age-days: 180
+
+  # Session Configuration
+  session:
+    timeout: 3600  # 1 hour
+
+# Logging Configuration
+logging:
+  level:
+    com.hospital: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    AUDIT: DEBUG
+    SECURITY: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/healthcare-dev.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+
+# Actuator Configuration
+management:
+  endpoints:
+    enabled-by-default: true
+    web:
+      base-path: /actuator
+      exposure:
+        include: '*'  # Expose all endpoints in development
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+    info:
+      enabled: true
+    loggers:
+      enabled: true
+    metrics:
+      enabled: true
+    env:
+      enabled: true
+  security:
+    enabled: false  # Disable security for easier development access
+
+# Development-specific properties
+debug: true
+trace: false
+
+# H2 Console (if using H2 for testing)
+# spring:
+#   h2:
+#     console:
+#       enabled: true
+#       path: /h2-console
+#       settings:
+#         trace: false
+#         web-allow-others: false
